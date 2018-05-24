@@ -3,45 +3,46 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "windivert.h"
 
 #define MAXBUF  0xFFFF
 
 typedef struct TCPHeader {
-	unsigned short SrcPort;
-	unsigned short DstPort;
-	unsigned int SN;
-	unsigned int AN;
-	unsigned char Offset : 4;
-	unsigned char Reserved : 4;
-	unsigned char FlagsC : 1;
-	unsigned char FlagsE : 1;
-	unsigned char FlagsU : 1;
-	unsigned char FlagsA : 1;
-	unsigned char FlagsP : 1;
-	unsigned char FlagsR : 1;
-	unsigned char FlagsS : 1;
-	unsigned char FlagsF : 1;
-	unsigned short Window;
-	unsigned short Check;
-	unsigned short UP;
+	uint16_t SrcPort;
+	uint16_t DstPort;
+	uint32_t SN;
+	uint32_t AN;
+	uint8_t Offset : 4;
+	uint8_t Reserved : 4;
+	uint8_t FlagsC : 1;
+	uint8_t FlagsE : 1;
+	uint8_t FlagsU : 1;
+	uint8_t FlagsA : 1;
+	uint8_t FlagsP : 1;
+	uint8_t FlagsR : 1;
+	uint8_t FlagsS : 1;
+	uint8_t FlagsF : 1;
+	uint8_t Window;
+	uint8_t Check;
+	uint8_t UP;
 }TCPH;
 
 typedef struct  {
-	unsigned char IHL : 4;
-	unsigned char Version : 4;
-	unsigned char TOS;
+	uint8_t IHL : 4;
+	uint8_t Version : 4;
+	uint8_t TOS;
 	unsigned short TotalLen;
 	unsigned short Identifi;
-	unsigned char Flagsx : 1;
-	unsigned char FlagsD : 1;
-	unsigned char FlagsM : 1;
-	unsigned char FO1 : 5;
-	unsigned char FO2;
-	unsigned char TTL;
-	unsigned char Protocal;
-	unsigned short HeaderCheck;
+	uint8_t Flagsx : 1;
+	uint8_t FlagsD : 1;
+	uint8_t FlagsM : 1;
+	uint8_t FO1 : 5;
+	uint8_t FO2;
+	uint8_t TTL;
+	uint8_t Protocol;
+	uint16_t HeaderCheck;
 	struct in_addr SrcAdd;
 	struct in_addr DstAdd;
 }IPH;
@@ -53,7 +54,7 @@ int main(int argc, char **argv) {
 	unsigned char packet[MAXBUF];
 	const char *err_str;
 	WINDIVERT_ADDRESS recv_addr;
-	UINT packet_len, len;
+	UINT packet_len;
 
 	handle = WinDivertOpen("true", WINDIVERT_LAYER_NETWORK, priority, 0);
 	if (handle == INVALID_HANDLE_VALUE)
@@ -79,13 +80,10 @@ int main(int argc, char **argv) {
 			continue;
 		}
 		
-		IPH * ipp;
-		ipp = (IPH *)packet;
-		len = (UINT16)(ipp->IHL) * 4;
-		TCPH *tcpp;
-		tcpp = (TCPH *)(packet + len);
+		IPH * ipp = (IPH *)packet;
 
-		if(ipp->Protocal == 0x06){
+		if(ipp->Protocol == 0x06){
+			TCPH *tcpp = (TCPH *)(packet + (UINT16)(ipp->IHL) * 4);
 			if ( ntohs(tcpp->SrcPort) == 0x0050|| ntohs(tcpp->DstPort) == 0x0050) {
 				printf( "Port 80 block success\n");
 				continue;
